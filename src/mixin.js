@@ -9,6 +9,8 @@ function defaultParser(input) {
  * When click and hold on a button - the speed of auto changin the value.
  */
 const SPEED = 200;
+const SPEED_UP_FACTOR = 0.9;
+const MIN_SPEED = 10;
 
 /**
  * When click and hold on a button - the delay before auto changin the value.
@@ -272,9 +274,13 @@ export default {
     });
   },
 
-  stop() {
+  stop(shouldContinue) {
     if (this.autoStepTimer) {
       clearTimeout(this.autoStepTimer);
+    }
+
+    if (!shouldContinue) {
+      this.currentSpeed = null;
     }
   },
 
@@ -282,21 +288,25 @@ export default {
     if (e.persist) {
       e.persist();
     }
-    this.stop();
+    this.stop(true);
     this.step('down', e, ratio);
+    this.currentSpeed = (this.currentSpeed * SPEED_UP_FACTOR) || SPEED;
+    this.currentSpeed = this.currentSpeed < MIN_SPEED ? MIN_SPEED : this.currentSpeed;
     this.autoStepTimer = setTimeout(() => {
       this.down(e, ratio, true);
-    }, recursive ? SPEED : DELAY);
+    }, recursive ? this.currentSpeed : DELAY);
   },
 
   up(e, ratio, recursive) {
     if (e.persist) {
       e.persist();
     }
-    this.stop();
+    this.stop(true);
     this.step('up', e, ratio);
+    this.currentSpeed = (this.currentSpeed * SPEED_UP_FACTOR) || SPEED;
+    this.currentSpeed = this.currentSpeed < MIN_SPEED ? MIN_SPEED : this.currentSpeed;
     this.autoStepTimer = setTimeout(() => {
       this.up(e, ratio, true);
-    }, recursive ? SPEED : DELAY);
+    }, recursive ? this.currentSpeed : DELAY);
   },
 };
